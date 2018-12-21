@@ -21,39 +21,23 @@ struct learner
 {
     int id;
     int acceptors;
-    int late_start;
     int current_instance_id;
     int hightest_instance_id;
 };
 
 struct learner
-*learner_new(int id, int acceptors)
+learner_new(int id)
 {
-    struct learner *l;
-    l = malloc(sizeof(struct learner));
-    if(l)
-    {
-        l->id = id;
-        l->acceptors = acceptors;
-        l->current_instance_id = 1;
-        l->hightest_instance_id = 1;
+    struct learner l;
+    l.id = id;
+    l.current_instance_id = 1;
+    l.hightest_instance_id = 1;
 
-        /*for late start read config file*/
 
-        return l;
-    }
-
-    return NULL;
+    return l;
 }
 
-void
-learner_free(struct learner *l)
-{
-    if(l)
-        free(l);
-}
-
-void
+/*void
 learner_set_instance_id(struct learner *l, int instance_id)
 {
     if(l)
@@ -61,7 +45,7 @@ learner_set_instance_id(struct learner *l, int instance_id)
         l->current_instance_id = instance_id + 1;
         l->hightest_instance_id = instance_id;
     }
-}
+}*/
 
 void 
 on_receive_message(evutil_socket_t fd, short event, void *arg)
@@ -77,7 +61,6 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
         err(1, "\ncorrupted data in acceptor\n");
 
     printf("%s\n", result.u.client_value.value.paxos_value_val);
-    //recv_paxos_message(&result);
 }
 
 int 
@@ -88,32 +71,27 @@ main(int argc, char *argv[])
 
     int number_of_acceptors = 3;
     int id = atoi(argv[1]);
-    struct learner *learner_instance = learner_new(id, number_of_acceptors);
+    struct learner learner_instance = learner_new(id);
     
-    if (learner_instance)
-    {
-        struct event_base *base = NULL;
-        base = event_base_new();
+    struct event_base *base = NULL;
+    base = event_base_new();
 
-        struct sockaddr_in learner_addr;
+    struct sockaddr_in learner_addr;
 
-        int learner_socket = create_socket_with_bind("learners", learner_addr, 1);
-        evutil_make_socket_nonblocking(learner_socket);
-        subscribe_multicast_group_by_role("learners", learner_socket);
+    int learner_socket = create_socket_with_bind("learners", learner_addr, 1);
+    evutil_make_socket_nonblocking(learner_socket);
+    subscribe_multicast_group_by_role("learners", learner_socket);
 
-        struct event *ev_receive_message;
-        ev_receive_message = event_new(base, learner_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
-        event_add(ev_receive_message, NULL);
+    struct event *ev_receive_message;
+    ev_receive_message = event_new(base, learner_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
+    event_add(ev_receive_message, NULL);
 
-        event_base_dispatch(base);
+    event_base_dispatch(base);
 
-        event_free(ev_receive_message);
-        event_base_free(base);
+    event_free(ev_receive_message);
+    event_base_free(base);
 
-        acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
+    acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
 
-        return 0;
-    }
-
-    return 1;
+    return 0;
 }

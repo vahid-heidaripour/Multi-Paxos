@@ -27,9 +27,9 @@ struct instance
 {
   int instance_id;
   int ballot;
+  int value_ballot;
   paxos_value value;
   paxos_value promised_value;
-  int value_ballot;
 };
 struct instance instance_array[1024];
 int accpetor_promise_message[1024];
@@ -42,7 +42,6 @@ instance_new(int instance_id, int ballot)
   ins.instance_id = instance_id;
   ins.ballot = ballot;
   ins.value_ballot = 0;
-  assert(ins.instance_id >= 0);
   return ins;
 }
 
@@ -52,28 +51,14 @@ struct proposer
   int number_of_acceptors;
 };
 
-struct proposer 
-*proposer_new(int id, int number_of_acceptors)
+struct proposer
+proposer_new(int id)
 {
-  struct proposer *p;
-  p = malloc(sizeof(struct proposer));
-  if(p)
-  {
-    assert(id > 0);
-    p->id = id;
-    p->number_of_acceptors = number_of_acceptors;
+  assert(id > 0);
+  struct proposer p;
+  p.id = id;
 
-    return p;
-  }
-
-  return NULL;
-}
-
-void 
-proposer_free(struct proposer *p)
-{
-  if(p)
-    free(p);
+  return p;
 }
 
 int 
@@ -104,9 +89,14 @@ unbox_received_message(paxos_message *msg)
             paxos_accept pa;
             pa.instance_id = instance_id;
             pa.ballot = msg->u.promise.ballot;
-            strcpy(pa.value.paxos_value_val, instance_array[instance_id].value.paxos_value_val);
+            if (strcmp(msg->u.promise.value.paxos_value_val, "NULL") != 0)
+              strcpy(pa.value.paxos_value_val, msg->u.promise.value.paxos_value_val);
+            else
+              strcpy(pa.value.paxos_value_val, instance_array[instance_id].value.paxos_value_val);
 
             accpetor_promise_message[instance_id] = 100; // don't send accept again in case that has 3 acceptors
+
+            printf("the value is : %s\n", pa.value.paxos_value_val);
 
             send_paxos_accept(acceptor_sock_fd, &acceptor_addr, &pa);
           }
@@ -126,12 +116,11 @@ unbox_received_message(paxos_message *msg)
           acceptor_decided_message[instance_id]++;
           if (acceptor_decided_message[instance_id] == get_quorum())
           {
-            instance_array[instance_id].promised_value = msg->u.accepted.value;
-            
             acceptor_decided_message[instance_id] = 100;
 
             paxos_client_value pc;  
-            pc.value = instance_array[instance_id].promised_value;
+            pc.value = msg->u.accepted.value;
+            printf("the accepted value is %s\n", pc.value.paxos_value_val);
             send_paxos_submit(learner_sock_fd, &learner_addr, pc.value.paxos_value_val);
           }
         }
@@ -140,15 +129,16 @@ unbox_received_message(paxos_message *msg)
 
       case PAXOS_CLIENT_VALUE:
       {
-        struct instance inst = instance_new(next_instance_id++, 0);
-        instance_array[free_position++] = inst;
-        paxos_value val;
-        strcpy(val.paxos_value_val, msg->u.client_value.value.paxos_value_val);
-        strcpy(inst.value.paxos_value_val, val.paxos_value_val);
+        struct instance inst = instance_new(next_instance_id, 1);
+        strcpy(inst.value.paxos_value_val, msg->u.client_value.value.paxos_value_val);
+        instance_array[next_instance_id] = inst;
+        printf("the paxos value is : %s\n", inst.value.paxos_value_val);
 
         paxos_prepare pp;
-        pp.instance_id = next_instance_id - 1;
-        pp.ballot = 0;
+        pp.instance_id = next_instance_id;
+        pp.ballot = 1;
+        next_instance_id++;
+        printf("the client value is : %s", instance_array[next_instance_id - 1].value.paxos_value_val);
         send_paxos_prepare(acceptor_sock_fd, &acceptor_addr, &pp);
       }
       break;
@@ -171,9 +161,6 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
   if (recv_bytes != sizeof(result))
     err(1, "\ncorrupted data\n");
 
-  //char m[1024];
-  //strcpy(m, result.u.client_value.value.paxos_value_val);
-  //send_paxos_submit(acceptor_sock_fd, &acceptor_addr, m, sizeof(m));
   unbox_received_message(&result);
 }
 
@@ -185,33 +172,28 @@ main(int argc, char* argv[])
     
   int number_of_acceptors = NUMBER_OF_ACCEPTORS;
   int id = atoi(argv[1]);
-  struct proposer *proposer_instance = proposer_new(id, number_of_acceptors);
+  struct proposer proposer_instance = proposer_new(id);
 
-  if (proposer_instance)
-  {
-    struct event_base *base = NULL;
-    base = event_base_new();
+  struct event_base *base = NULL;
+  base = event_base_new();
 
-    struct sockaddr_in proposer_addr;
+  struct sockaddr_in proposer_addr;
 
-    int proposer_socket = create_socket_with_bind("proposers", proposer_addr, 1);
-    evutil_make_socket_nonblocking(proposer_socket);
-    subscribe_multicast_group_by_role("proposers", proposer_socket);
+  int proposer_socket = create_socket_with_bind("proposers", proposer_addr, 1);
+  evutil_make_socket_nonblocking(proposer_socket);
+  subscribe_multicast_group_by_role("proposers", proposer_socket);
 
-    acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
-    learner_sock_fd = create_socket_by_role("learners", &learner_addr);
+  acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
+  learner_sock_fd = create_socket_by_role("learners", &learner_addr);
 
-    struct event *ev_submit_client;
-    ev_submit_client = event_new(base, proposer_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
-    event_add(ev_submit_client, NULL);
+  struct event *ev_submit_client;
+  ev_submit_client = event_new(base, proposer_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
+  event_add(ev_submit_client, NULL);
 
-    event_base_dispatch(base);
+  event_base_dispatch(base);
 
-    event_free(ev_submit_client);
-    event_base_free(base);
+  event_free(ev_submit_client);
+  event_base_free(base);
 
-    return 0;
-  }
-
-  return 1;
+  return 0;
 }

@@ -20,7 +20,6 @@ struct sockaddr_in proposer_addr;
 struct sockaddr_in learner_addr;
 
 int proposer_sock_fd, learner_sock_fd;
-int next_instance_id = 1;
 int free_position = 0;
 
 struct instance 
@@ -37,20 +36,18 @@ set_default_values()
 {
   struct instance ins;
   ins.instance_id = -1;
-  ins.ballot = -1;
-  ins.value_ballot = -1;
+  ins.ballot = 0;
+  ins.value_ballot = 0;
+  strcpy(ins.value.paxos_value_val, "NULL");
   
   return ins;
 }
 
 struct instance 
-instance_new(int instance_id, int ballot)
+instance_new(int instance_id)
 {
-  struct instance ins;
+  struct instance ins = set_default_values();
   ins.instance_id = instance_id;
-  ins.ballot = ballot;
-  ins.value_ballot = 0;
-  assert(ins.instance_id >= 0);
   return ins;
 }
 
@@ -60,19 +57,12 @@ struct acceptor
 };
 
 struct acceptor
-*acceptor_new(int id)
+acceptor_new(int id)
 {
-  struct acceptor *a;
-  a = malloc(sizeof(struct acceptor));
-  a->id = id;
+  struct acceptor a;
+  assert(id > 0);
+  a.id = id;
   return a;
-}
-
-void
-acceptor_free(struct acceptor *a)
-{
-  if(a)
-    free(a);
 }
 
 void 
@@ -87,15 +77,16 @@ unbox_received_message(paxos_message msg)
       uint32_t ballot = msg.u.prepare.ballot;
 
       struct instance inst;
-      if (instance_array[instacne_id].instance_id < 0)
+      if (instance_array[instacne_id].instance_id < 0) //instance is empty
       {
-        inst = instance_new(next_instance_id++, 0);
-        instance_array[free_position++] = inst;
+        inst = instance_new(instacne_id);
+        instance_array[instacne_id] = inst;
       }
       else 
         inst = instance_array[instacne_id];
 
-      if (ballot >= instance_array[instacne_id].ballot)
+      printf("%d , %d\n", ballot, instance_array[instacne_id].ballot);
+      if (ballot > instance_array[instacne_id].ballot)
       {
         instance_array[instacne_id].ballot = ballot;
         paxos_promise pp;
@@ -167,33 +158,28 @@ main(int argc, char *argv[])
     instance_array[i] = set_default_values();
 
   id = atoi(argv[1]);
-  struct acceptor *acceptor_instance = acceptor_new(id);
+  struct acceptor acceptor_instance = acceptor_new(id);
 
-  if (acceptor_instance)
-  {
-    struct event_base *base = NULL;
-    base = event_base_new();
+  struct event_base *base = NULL;
+  base = event_base_new();
 
-    struct sockaddr_in acceptor_addr;
+  struct sockaddr_in acceptor_addr;
 
-    int acceptor_socket = create_socket_with_bind("acceptors", acceptor_addr, 1);
-    evutil_make_socket_nonblocking(acceptor_socket);
-    subscribe_multicast_group_by_role("acceptors", acceptor_socket);
+  int acceptor_socket = create_socket_with_bind("acceptors", acceptor_addr, 1);
+  evutil_make_socket_nonblocking(acceptor_socket);
+  subscribe_multicast_group_by_role("acceptors", acceptor_socket);
 
-    proposer_sock_fd = create_socket_by_role("proposers", &proposer_addr);
-    learner_sock_fd = create_socket_by_role("learners", &learner_addr);
+  proposer_sock_fd = create_socket_by_role("proposers", &proposer_addr);
+  learner_sock_fd = create_socket_by_role("learners", &learner_addr);
 
-    struct event *ev_receive_message;
-    ev_receive_message = event_new(base, acceptor_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
-    event_add(ev_receive_message, NULL);
+  struct event *ev_receive_message;
+  ev_receive_message = event_new(base, acceptor_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
+  event_add(ev_receive_message, NULL);
 
-    event_base_dispatch(base);
+  event_base_dispatch(base);
 
-    event_free(ev_receive_message);
-    event_base_free(base);
+  event_free(ev_receive_message);
+  event_base_free(base);
 
-    return 0;
-  }
-
-  return 1;
+  return 0;
 }
