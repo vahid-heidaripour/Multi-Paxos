@@ -139,11 +139,22 @@ send_paxos_accepted(int sock_fd, struct sockaddr_in *dest_addr, paxos_accepted *
 }
 
 void 
-send_paxos_submit(int sock_fd, struct sockaddr_in *dest_addr, char *data)
+send_paxos_submit(int sock_fd, struct sockaddr_in *dest_addr, char *data, int instance_id)
 {
     paxos_message msg;
     msg.type = PAXOS_CLIENT_VALUE;
+    msg.u.client_value.instance_id = instance_id;
     strcpy(msg.u.client_value.value.paxos_value_val, data);
     send_paxos_message(sock_fd, dest_addr, &msg);
     printf("Send submit for value %s\n", msg.u.client_value.value.paxos_value_val);
+}
+
+void
+send_paxos_holes(int sock_fd, struct sockaddr_in *dest_addr, paxos_has_hole *ph)
+{
+    paxos_message msg;
+    msg.type = PAXOS_HAS_HOLE;
+    msg.u.has_holes.instance_id_low = ph->instance_id_low;
+    msg.u.has_holes.instance_id_high = ph->instance_id_high;
+    send_paxos_message(sock_fd, dest_addr, &msg);
 }

@@ -24,28 +24,18 @@ struct learner
     int current_instance_id;
     int hightest_instance_id;
 };
+struct learner learner_instance;
 
 struct learner
 learner_new(int id)
 {
     struct learner l;
     l.id = id;
-    l.current_instance_id = 1;
-    l.hightest_instance_id = 1;
-
+    l.current_instance_id = 0;
+    l.hightest_instance_id = 0;
 
     return l;
 }
-
-/*void
-learner_set_instance_id(struct learner *l, int instance_id)
-{
-    if(l)
-    {
-        l->current_instance_id = instance_id + 1;
-        l->hightest_instance_id = instance_id;
-    }
-}*/
 
 void 
 on_receive_message(evutil_socket_t fd, short event, void *arg)
@@ -60,7 +50,21 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
     if (recv_bytes != sizeof(result))
         err(1, "\ncorrupted data in acceptor\n");
 
-    printf("%s\n", result.u.client_value.value.paxos_value_val);
+    int instance_id = result.u.client_value.instance_id;
+    if (learner_instance.current_instance_id == instance_id)
+    {
+        printf("%s\n", result.u.client_value.value.paxos_value_val);
+        learner_instance.current_instance_id++;
+    }
+    else if (learner_instance.current_instance_id < instance_id)
+    {
+        //there is some holes in learners
+        //send to acceptors
+        paxos_has_hole ph;
+        ph.instance_id_low = learner_instance.current_instance_id;
+        ph.instance_id_high = instance_id;
+        send_paxos_holes(acceptor_sock_fd, &acceptor_addr, &ph);
+    }
 }
 
 int 
@@ -71,7 +75,7 @@ main(int argc, char *argv[])
 
     int number_of_acceptors = 3;
     int id = atoi(argv[1]);
-    struct learner learner_instance = learner_new(id);
+    learner_instance = learner_new(id);
     
     struct event_base *base = NULL;
     base = event_base_new();
@@ -82,6 +86,8 @@ main(int argc, char *argv[])
     evutil_make_socket_nonblocking(learner_socket);
     subscribe_multicast_group_by_role("learners", learner_socket);
 
+    acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
+
     struct event *ev_receive_message;
     ev_receive_message = event_new(base, learner_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
     event_add(ev_receive_message, NULL);
@@ -90,8 +96,6 @@ main(int argc, char *argv[])
 
     event_free(ev_receive_message);
     event_base_free(base);
-
-    acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
 
     return 0;
 }

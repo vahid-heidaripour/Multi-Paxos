@@ -32,7 +32,7 @@ main(int argc, char* argv[])
   while (!feof(stdin))
    {
       scanf("%[^\n]%*c", message);
-      send_paxos_submit(socket_fd, &addr, message);
+      send_paxos_submit(socket_fd, &addr, message, -1);
    }
 
   return 0;

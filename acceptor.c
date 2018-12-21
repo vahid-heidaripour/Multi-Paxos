@@ -127,6 +127,22 @@ unbox_received_message(paxos_message msg)
     case PAXOS_CLIENT_VALUE:
     break;
 
+    case PAXOS_HAS_HOLE:
+    {
+      printf("In holes\n");
+      paxos_has_hole ph = msg.u.has_holes;
+      int lowest_instance = ph.instance_id_low;
+      int highest_instance = ph.instance_id_high;
+
+      paxos_client_value pc;
+      for (int i = lowest_instance; i <= highest_instance; ++i)
+      {
+        pc.value = instance_array[i].value;
+        send_paxos_submit(learner_sock_fd, &learner_addr, pc.value.paxos_value_val, i);
+      }
+    }
+    break;
+
     default:
     break;
   }

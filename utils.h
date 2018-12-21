@@ -46,9 +46,17 @@ typedef struct paxos_accepted paxos_accepted;
 
 struct paxos_client_value
 {
+    uint32_t instance_id;
     paxos_value value;
 };
 typedef struct paxos_client_value paxos_client_value;
+
+struct paxos_has_hole
+{
+    uint32_t instance_id_low;
+    uint32_t instance_id_high;
+};
+typedef struct paxos_has_hole paxos_has_hole;
 
 enum paxos_message_type
 {
@@ -56,7 +64,8 @@ enum paxos_message_type
 	PAXOS_PROMISE,
 	PAXOS_ACCEPT,
 	PAXOS_ACCEPTED,
-    PAXOS_CLIENT_VALUE
+    PAXOS_CLIENT_VALUE,
+    PAXOS_HAS_HOLE
 };
 typedef enum paxos_message_type paxos_message_type;
 
@@ -70,6 +79,7 @@ struct paxos_message
 		paxos_accept accept;
 		paxos_accepted accepted;
         paxos_client_value client_value;
+        paxos_has_hole has_holes;
     } u;
 };
 typedef struct paxos_message paxos_message;

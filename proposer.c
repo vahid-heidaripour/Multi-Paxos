@@ -64,7 +64,6 @@ proposer_new(int id)
 int 
 get_quorum()
 {
-  printf("quorum : %d\n", (NUMBER_OF_ACCEPTORS / 2) + 1);
   return (NUMBER_OF_ACCEPTORS / 2) + 1;
 }
 
@@ -96,8 +95,6 @@ unbox_received_message(paxos_message *msg)
 
             accpetor_promise_message[instance_id] = 100; // don't send accept again in case that has 3 acceptors
 
-            printf("the value is : %s\n", pa.value.paxos_value_val);
-
             send_paxos_accept(acceptor_sock_fd, &acceptor_addr, &pa);
           }
         }
@@ -119,9 +116,9 @@ unbox_received_message(paxos_message *msg)
             acceptor_decided_message[instance_id] = 100;
 
             paxos_client_value pc;  
+            pc.instance_id = instance_id;
             pc.value = msg->u.accepted.value;
-            printf("the accepted value is %s\n", pc.value.paxos_value_val);
-            send_paxos_submit(learner_sock_fd, &learner_addr, pc.value.paxos_value_val);
+            send_paxos_submit(learner_sock_fd, &learner_addr, pc.value.paxos_value_val, instance_id);
           }
         }
       }
@@ -132,15 +129,16 @@ unbox_received_message(paxos_message *msg)
         struct instance inst = instance_new(next_instance_id, 1);
         strcpy(inst.value.paxos_value_val, msg->u.client_value.value.paxos_value_val);
         instance_array[next_instance_id] = inst;
-        printf("the paxos value is : %s\n", inst.value.paxos_value_val);
 
         paxos_prepare pp;
         pp.instance_id = next_instance_id;
         pp.ballot = 1;
         next_instance_id++;
-        printf("the client value is : %s", instance_array[next_instance_id - 1].value.paxos_value_val);
         send_paxos_prepare(acceptor_sock_fd, &acceptor_addr, &pp);
       }
+      break;
+
+      case PAXOS_HAS_HOLE:
       break;
 
       default:
