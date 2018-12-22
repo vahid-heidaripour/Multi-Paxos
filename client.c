@@ -28,7 +28,7 @@ main(int argc, char* argv[])
   config_file = argv[2];
   
   struct sockaddr_in addr;
-  socket_fd = create_socket_by_role("proposers", &addr);
+  socket_fd = create_socket_by_role(config_file, "proposers", &addr);
   while (!feof(stdin))
    {
       scanf("%[^\n]%*c", message);

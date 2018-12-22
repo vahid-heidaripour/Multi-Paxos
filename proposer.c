@@ -162,6 +162,16 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
   unbox_received_message(&result);
 }
 
+void 
+send_heartbeat(evutil_socket_t fd, short event, void *arg)
+{
+  while (1)
+  {
+    printf("hello\n");
+    usleep(1000); //send heartbeat each milisecond
+  }
+}
+
 int 
 main(int argc, char* argv[])
 {
@@ -170,6 +180,9 @@ main(int argc, char* argv[])
     
   int number_of_acceptors = NUMBER_OF_ACCEPTORS;
   int id = atoi(argv[1]);
+
+  char *config_file = argv[2];
+
   struct proposer proposer_instance = proposer_new(id);
 
   struct event_base *base = NULL;
@@ -177,16 +190,19 @@ main(int argc, char* argv[])
 
   struct sockaddr_in proposer_addr;
 
-  int proposer_socket = create_socket_with_bind("proposers", proposer_addr, 1);
+  int proposer_socket = create_socket_with_bind(config_file, "proposers", proposer_addr, 1);
   evutil_make_socket_nonblocking(proposer_socket);
-  subscribe_multicast_group_by_role("proposers", proposer_socket);
+  subscribe_multicast_group_by_role(config_file, "proposers", proposer_socket);
 
-  acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
-  learner_sock_fd = create_socket_by_role("learners", &learner_addr);
+  acceptor_sock_fd = create_socket_by_role(config_file, "acceptors", &acceptor_addr);
+  learner_sock_fd = create_socket_by_role(config_file, "learners", &learner_addr);
 
-  struct event *ev_submit_client;
+  struct event *ev_submit_client, *ev_heartbeat;
   ev_submit_client = event_new(base, proposer_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
   event_add(ev_submit_client, NULL);
+
+  /*ev_heartbeat = event_new(base, proposer_socket, EV_WRITE|EV_PERSIST, send_heartbeat, &base);
+  event_add(ev_heartbeat, NULL);*/
 
   event_base_dispatch(base);
 

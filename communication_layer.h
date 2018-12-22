@@ -15,13 +15,13 @@ group_address
 get_server_address_by_role(const char *config, const char *role);
 
 int 
-create_socket_with_bind(const char *role, struct sockaddr_in addr, int bind_value);
+create_socket_with_bind(const char *config, const char *role, struct sockaddr_in addr, int bind_value);
 
 int
-create_socket_by_role(const char *role, struct sockaddr_in *addr);
+create_socket_by_role(const char *config, const char *role, struct sockaddr_in *addr);
 
 void 
-subscribe_multicast_group_by_role(const char *role, const int sock_id);
+subscribe_multicast_group_by_role(const char *config, const char *role, const int sock_id);
 
 void 
 send_paxos_message(int sock_fd, struct sockaddr_in *dest_addr, paxos_message *msg);

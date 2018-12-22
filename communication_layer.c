@@ -32,14 +32,14 @@ get_server_address_by_role(const char *config, const char *role)
 }
 
 int 
-create_socket_with_bind(const char *role, struct sockaddr_in addr, int bind_value)
+create_socket_with_bind(const char *config, const char *role, struct sockaddr_in addr, int bind_value)
 {
   u_int loop = 1;
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd < 0)
     err(1, "\ncreate socket error\n");
 
-  group_address endpoint_addr = get_server_address_by_role("config", role);
+  group_address endpoint_addr = get_server_address_by_role(config, role);
   
   memset(&addr, 0, sizeof(struct sockaddr_in));
   addr.sin_family = AF_INET;
@@ -59,14 +59,14 @@ create_socket_with_bind(const char *role, struct sockaddr_in addr, int bind_valu
 }
 
 int
-create_socket_by_role(const char *role, struct sockaddr_in *addr)
+create_socket_by_role(const char *config, const char *role, struct sockaddr_in *addr)
 {
   u_int loop = 1;
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd < 0)
     err(1, "\ncreate socket error\n");
 
-  group_address endpoint_addr = get_server_address_by_role("config", role);
+  group_address endpoint_addr = get_server_address_by_role(config, role);
   
   memset(addr, 0, sizeof(struct sockaddr_in));
   addr->sin_family = AF_INET;
@@ -77,9 +77,9 @@ create_socket_by_role(const char *role, struct sockaddr_in *addr)
 }
 
 void
-subscribe_multicast_group_by_role(const char *role, const int sock_fd)
+subscribe_multicast_group_by_role(const char *config, const char *role, const int sock_fd)
 {
-  group_address endpoint_addr = get_server_address_by_role("config", role);
+  group_address endpoint_addr = get_server_address_by_role(config, role);
   struct ip_mreq mreq;
   mreq.imr_multiaddr.s_addr = inet_addr(endpoint_addr.ip_addr);
   mreq.imr_interface.s_addr = htonl(INADDR_ANY);

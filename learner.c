@@ -75,6 +75,9 @@ main(int argc, char *argv[])
 
     int number_of_acceptors = 3;
     int id = atoi(argv[1]);
+
+    char *config_file = argv[2];
+
     learner_instance = learner_new(id);
     
     struct event_base *base = NULL;
@@ -82,11 +85,11 @@ main(int argc, char *argv[])
 
     struct sockaddr_in learner_addr;
 
-    int learner_socket = create_socket_with_bind("learners", learner_addr, 1);
+    int learner_socket = create_socket_with_bind(config_file, "learners", learner_addr, 1);
     evutil_make_socket_nonblocking(learner_socket);
-    subscribe_multicast_group_by_role("learners", learner_socket);
+    subscribe_multicast_group_by_role(config_file, "learners", learner_socket);
 
-    acceptor_sock_fd = create_socket_by_role("acceptors", &acceptor_addr);
+    acceptor_sock_fd = create_socket_by_role(config_file, "acceptors", &acceptor_addr);
 
     struct event *ev_receive_message;
     ev_receive_message = event_new(base, learner_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
