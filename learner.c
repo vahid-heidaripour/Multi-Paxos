@@ -54,6 +54,7 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
     if (learner_instance.current_instance_id == instance_id)
     {
         printf("%s\n", result.u.client_value.value.paxos_value_val);
+        fflush(stdout);
         learner_instance.current_instance_id++;
     }
     else if (learner_instance.current_instance_id < instance_id)
