@@ -91,7 +91,6 @@ void
 send_paxos_message(int sock_fd, struct sockaddr_in *dest_addr, paxos_message *msg)
 {
     int send_bytes = sendto(sock_fd, msg, sizeof(paxos_message), 0, (struct sockaddr *)dest_addr, sizeof(struct sockaddr));
-    printf("sent bytes : %d\n", send_bytes);
     if (send_bytes <= 0)
         err(1, "\nthere is problem in sender!\n");
 

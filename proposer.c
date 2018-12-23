@@ -10,6 +10,7 @@
 #include <assert.h>
 #include <err.h>
 #include <sys/time.h>
+#include <pthread.h>
 #include "communication_layer.h"
 #include "utils.h"
 
@@ -77,7 +78,6 @@ void
 unbox_received_message(paxos_message *msg)
 {
   paxos_message_type mst = (paxos_message_type)msg->type;
-  printf("unbox %d\n", mst);
   switch (mst)
   {
       case PAXOS_PREPARE:
@@ -159,7 +159,6 @@ unbox_received_message(paxos_message *msg)
 
       case PAXOS_LEADER:
       {
-        printf("received\n");
         gettimeofday(&last, NULL);
         if (is_leader != 1)
         {
@@ -187,7 +186,6 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
   socklen_t addrlen = sizeof(remote);
   paxos_message result;
   int recv_bytes = recvfrom(fd, &result, sizeof(result), 0, (struct sockaddr *)&remote, &addrlen);
-  printf("receive bytes : %d\n", recv_bytes);
   if (recv_bytes < 0)
     err(1, "\nthere is a problem in recvfrom\n");
 
@@ -200,20 +198,18 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
 void 
 send_heartbeat(evutil_socket_t fd, short event, void *arg)
 {
+  event_add(send_heartbeat, 1);
   if (is_leader == 1)
   {
-    while (1)
-    {
-      printf("hi\n");
-      paxos_leader pl;
-      pl.leader_id = id;
-      pl.last_instance_id = next_instance_id;
-      paxos_message msg;
-      msg.type = PAXOS_LEADER;
-      msg.u.leader = pl;
-      send_paxos_message(proposer_fd, &proposer_addr, &msg);
-      usleep(500000); //send heartbeat each milisecond
-    }
+    printf("hi\n");
+    paxos_leader pl;
+    pl.leader_id = id;
+    pl.last_instance_id = next_instance_id;
+    paxos_message msg;
+    msg.type = PAXOS_LEADER;
+    msg.u.leader = pl;
+    send_paxos_message(proposer_fd, &proposer_addr, &msg);
+    //usleep(1000); //send heartbeat each milisecond
   }
 }
 
@@ -221,10 +217,8 @@ void
 is_leader_alive(evutil_socket_t fd, short event, void *arg)
 {
   gettimeofday(&current, NULL);
-  printf("%d\n", current.tv_usec - last.tv_usec);
   if (current.tv_usec - last.tv_usec > 20000)
   {
-    printf("here\n");
     is_leader = 1;
     paxos_leader pl;
     pl.leader_id = id;
@@ -268,20 +262,12 @@ main(int argc, char* argv[])
   evutil_make_socket_nonblocking(proposer_sock_fd);
   subscribe_multicast_group_by_role(config_file, "proposers", proposer_sock_fd);
 
-  /*paxos_leader pl;
-  pl.leader_id = id;
-  pl.last_instance_id = next_instance_id;
-  paxos_message msg;
-  msg.type = PAXOS_LEADER;
-  msg.u.leader = pl;
-  send_paxos_message(proposer_fd, &proposer_addr, &msg);*/
-
   struct event *ev_submit_client, *ev_heartbeat, *ev_is_leader_alive;
   ev_submit_client = event_new(base, proposer_sock_fd, EV_READ|EV_PERSIST, on_receive_message, &base);
   event_add(ev_submit_client, NULL);
 
-  ev_heartbeat = event_new(base, proposer_sock_fd, EV_WRITE|EV_PERSIST, send_heartbeat, &base);
-  event_add(ev_heartbeat, NULL);
+  ev_heartbeat = event_new(base, proposer_sock_fd, 0, send_heartbeat, &base);
+  //event_add(ev_heartbeat, NULL);
 
   ev_is_leader_alive = event_new(base, proposer_sock_fd, EV_WRITE|EV_PERSIST, is_leader_alive, &base);
   event_add(ev_is_leader_alive, NULL);
