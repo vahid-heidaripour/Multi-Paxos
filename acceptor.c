@@ -29,7 +29,7 @@ struct instance
   int value_ballot;
   paxos_value value;
 };
-struct instance instance_array[1024];
+struct instance instance_array[2048];
 
 struct instance 
 set_default_values()
@@ -141,6 +141,9 @@ unbox_received_message(paxos_message msg)
         send_paxos_submit(learner_sock_fd, &learner_addr, pc.value.paxos_value_val, i);
       }
     }
+    break;
+
+    case PAXOS_LEADER:
     break;
 
     default:

@@ -91,6 +91,7 @@ void
 send_paxos_message(int sock_fd, struct sockaddr_in *dest_addr, paxos_message *msg)
 {
     int send_bytes = sendto(sock_fd, msg, sizeof(paxos_message), 0, (struct sockaddr *)dest_addr, sizeof(struct sockaddr));
+    printf("sent bytes : %d\n", send_bytes);
     if (send_bytes <= 0)
         err(1, "\nthere is problem in sender!\n");
 
@@ -105,7 +106,7 @@ send_paxos_prepare(int sock_fd, struct sockaddr_in *dest_addr, paxos_prepare *pp
     msg.type = PAXOS_PREPARE;
     msg.u.prepare = *pp;
     send_paxos_message(sock_fd, dest_addr, &msg);
-    printf("Send prepare for instance id %d and ballot %d\n", pp->instance_id, pp->ballot);
+    //printf("Send prepare for instance id %d and ballot %d\n", pp->instance_id, pp->ballot);
 }
 
 void 
@@ -115,7 +116,7 @@ send_paxos_promise(int sock_fd, struct sockaddr_in *dest_addr, paxos_promise *pp
     msg.type = PAXOS_PROMISE;
     msg.u.promise = *pp;
     send_paxos_message(sock_fd, dest_addr, &msg);
-    printf("Send promise for instance id %d and ballot %d\n", pp->instance_id, pp->ballot);
+    //printf("Send promise for instance id %d and ballot %d\n", pp->instance_id, pp->ballot);
 }
 
 void 
@@ -125,7 +126,7 @@ send_paxos_accept(int sock_fd, struct sockaddr_in *dest_addr, paxos_accept *pa)
     msg.type = PAXOS_ACCEPT;
     msg.u.accept = *pa;
     send_paxos_message(sock_fd, dest_addr, &msg);
-    printf("Send accept for instance id %d and ballot %d\n", pa->instance_id, pa->ballot);
+    //printf("Send accept for instance id %d and ballot %d\n", pa->instance_id, pa->ballot);
 }
 
 void 
@@ -135,7 +136,7 @@ send_paxos_accepted(int sock_fd, struct sockaddr_in *dest_addr, paxos_accepted *
     msg.type = PAXOS_ACCEPTED;
     msg.u.accepted = *pa;
     send_paxos_message(sock_fd, dest_addr, &msg);
-    printf("Send accepted for instance id %d and ballot %d\n", pa->instance_id, pa->ballot);
+    //printf("Send accepted for instance id %d and ballot %d\n", pa->instance_id, pa->ballot);
 }
 
 void 
@@ -146,7 +147,7 @@ send_paxos_submit(int sock_fd, struct sockaddr_in *dest_addr, char *data, int in
     msg.u.client_value.instance_id = instance_id;
     strcpy(msg.u.client_value.value.paxos_value_val, data);
     send_paxos_message(sock_fd, dest_addr, &msg);
-    printf("Send submit for value %s\n", msg.u.client_value.value.paxos_value_val);
+    //printf("Send submit for value %s\n", msg.u.client_value.value.paxos_value_val);
 }
 
 void

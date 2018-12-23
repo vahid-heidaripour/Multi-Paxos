@@ -58,6 +58,13 @@ struct paxos_has_hole
 };
 typedef struct paxos_has_hole paxos_has_hole;
 
+struct paxos_leader
+{
+    uint32_t leader_id;
+    uint32_t last_instance_id;
+};
+typedef struct paxos_leader paxos_leader;
+
 enum paxos_message_type
 {
     PAXOS_PREPARE,
@@ -65,7 +72,8 @@ enum paxos_message_type
 	PAXOS_ACCEPT,
 	PAXOS_ACCEPTED,
     PAXOS_CLIENT_VALUE,
-    PAXOS_HAS_HOLE
+    PAXOS_HAS_HOLE,
+    PAXOS_LEADER
 };
 typedef enum paxos_message_type paxos_message_type;
 
@@ -80,6 +88,7 @@ struct paxos_message
 		paxos_accepted accepted;
         paxos_client_value client_value;
         paxos_has_hole has_holes;
+        paxos_leader leader;
     } u;
 };
 typedef struct paxos_message paxos_message;
