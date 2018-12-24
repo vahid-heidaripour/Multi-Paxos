@@ -217,10 +217,10 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
 void 
 send_heartbeat(evutil_socket_t fd, short event, void *arg)
 {
-  event_add(ev_heartbeat, &tv1);
   if (is_leader == 1)
   {
     printf("hi\n");
+    fflush(stdout);
     paxos_leader pl;
     pl.leader_id = id;
     pl.last_instance_id = next_instance_id;
@@ -234,11 +234,11 @@ send_heartbeat(evutil_socket_t fd, short event, void *arg)
 void 
 is_leader_alive(evutil_socket_t fd, short event, void *arg)
 {
-  event_add(ev_is_leader_alive, &tv2);
   gettimeofday(&current, NULL);
   if (current.tv_usec - last.tv_usec > 20000 && is_received_heartbeat)
   {
     printf("leader is dead\n");
+    fflush(stdout);
     is_leader = 1;
     paxos_leader pl;
     pl.leader_id = id;
@@ -287,14 +287,17 @@ main(int argc, char* argv[])
   ev_submit_client = event_new(base, proposer_sock_fd, EV_READ|EV_PERSIST, on_receive_message, &base);
   event_add(ev_submit_client, NULL);
 
-  ev_heartbeat = event_new(base, proposer_sock_fd, 0, send_heartbeat, &base);
+  ev_heartbeat = event_new(base, proposer_sock_fd, 0|EV_PERSIST, send_heartbeat, &base);
+  event_add(ev_heartbeat, &tv1);
 
-  ev_is_leader_alive = event_new(base, proposer_sock_fd, 0, is_leader_alive, &base);
+  ev_is_leader_alive = event_new(base, proposer_sock_fd, 0|EV_PERSIST, is_leader_alive, &base);
+  event_add(ev_is_leader_alive, &tv2);
 
   event_base_dispatch(base);
 
   event_free(ev_submit_client);
   event_free(ev_heartbeat);
+  event_free(ev_is_leader_alive);
   event_base_free(base);
 
   return 0;
