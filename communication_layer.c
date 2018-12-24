@@ -105,7 +105,7 @@ send_paxos_prepare(int sock_fd, struct sockaddr_in *dest_addr, paxos_prepare *pp
     msg.type = PAXOS_PREPARE;
     msg.u.prepare = *pp;
     send_paxos_message(sock_fd, dest_addr, &msg);
-    //printf("Send prepare for instance id %d and ballot %d\n", pp->instance_id, pp->ballot);
+    printf("Send prepare for instance id %d and ballot %d\n", pp->instance_id, pp->ballot);
 }
 
 void 
