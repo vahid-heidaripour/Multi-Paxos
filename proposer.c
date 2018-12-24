@@ -233,9 +233,10 @@ send_heartbeat(evutil_socket_t fd, short event, void *arg)
 void 
 is_leader_alive(evutil_socket_t fd, short event, void *arg)
 {
-  evtimer_add(ev_is_leader_alive, &tv2);
   gettimeofday(&current, NULL);
-  if (current.tv_usec - last.tv_usec > 20000 && is_received_heartbeat)
+  if (current.tv_usec - last.tv_usec <= 20000)
+	  evtimer_add(ev_is_leader_alive, &tv2);
+  else if (is_received_heartbeat)
   {
     printf("leader is dead\n");
     fflush(stdout);
