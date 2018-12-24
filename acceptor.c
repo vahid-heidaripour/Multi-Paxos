@@ -85,7 +85,6 @@ unbox_received_message(paxos_message msg)
       else 
         inst = instance_array[instacne_id];
 
-      printf("%d , %d\n", ballot, instance_array[instacne_id].ballot);
       if (ballot > instance_array[instacne_id].ballot)
       {
         instance_array[instacne_id].ballot = ballot;
@@ -97,8 +96,14 @@ unbox_received_message(paxos_message msg)
         pp.value = instance_array[instacne_id].value;
         send_paxos_promise(proposer_sock_fd, &proposer_addr, &pp);
       }
-      //else send nack
-
+      else
+      {
+        //send nack
+        paxos_nack pn;
+        pn.instance_id = instacne_id;
+        pn.promised_ballot = instance_array[instacne_id].ballot;
+        send_paxos_nack(proposer_sock_fd, &proposer_addr, &pn);
+      }
     }
     break;
 
@@ -129,7 +134,6 @@ unbox_received_message(paxos_message msg)
 
     case PAXOS_HAS_HOLE:
     {
-      printf("In holes\n");
       paxos_has_hole ph = msg.u.has_holes;
       int lowest_instance = ph.instance_id_low;
       int highest_instance = ph.instance_id_high;

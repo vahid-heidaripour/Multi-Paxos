@@ -139,6 +139,15 @@ send_paxos_accepted(int sock_fd, struct sockaddr_in *dest_addr, paxos_accepted *
 }
 
 void 
+send_paxos_nack(int sock_fd, struct sockaddr_in *dest_addr, paxos_nack *pn)
+{
+    paxos_message msg;
+    msg.type = PAXOS_NACK;
+    msg.u.nack = *pn;
+    send_paxos_message(sock_fd, dest_addr, &msg);
+}
+
+void 
 send_paxos_submit(int sock_fd, struct sockaddr_in *dest_addr, char *data, int instance_id)
 {
     paxos_message msg;

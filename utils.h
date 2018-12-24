@@ -44,6 +44,13 @@ struct paxos_accepted
 };
 typedef struct paxos_accepted paxos_accepted;
 
+struct paxos_nack
+{
+    uint32_t instance_id;
+    uint32_t promised_ballot;
+};
+typedef struct paxos_nack paxos_nack;
+
 struct paxos_client_value
 {
     uint32_t instance_id;
@@ -71,6 +78,7 @@ enum paxos_message_type
 	PAXOS_PROMISE,
 	PAXOS_ACCEPT,
 	PAXOS_ACCEPTED,
+    PAXOS_NACK,
     PAXOS_CLIENT_VALUE,
     PAXOS_HAS_HOLE,
     PAXOS_LEADER
@@ -86,6 +94,7 @@ struct paxos_message
 		paxos_promise promise;
 		paxos_accept accept;
 		paxos_accepted accepted;
+        paxos_nack nack;
         paxos_client_value client_value;
         paxos_has_hole has_holes;
         paxos_leader leader;

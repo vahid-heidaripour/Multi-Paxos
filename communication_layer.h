@@ -38,6 +38,9 @@ send_paxos_accept(int sock_fd, struct sockaddr_in *dest_addr, paxos_accept *pa);
 void 
 send_paxos_accepted(int sock_fd, struct sockaddr_in *dest_addr, paxos_accepted *pa);
 
+void 
+send_paxos_nack(int sock_fd, struct sockaddr_in *dest_addr, paxos_nack *pn);
+
 void
 send_paxos_holes(int sock_fd, struct sockaddr_in *dest_addr, paxos_has_hole *ph);
 

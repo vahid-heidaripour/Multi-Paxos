@@ -26,7 +26,13 @@ int next_instance_id = 0;
 int free_position = 0;
 
 int is_leader = 0;
+int is_received_heartbeat = 0;
 int id = 0;
+
+struct timeval tv1 = {0, 1000};
+struct timeval tv2 = {0, 100};
+
+struct event *ev_heartbeat, *ev_is_leader_alive;
 
 struct timeval current, last;
 
@@ -137,6 +143,18 @@ unbox_received_message(paxos_message *msg)
       }
       break;
 
+      case PAXOS_NACK:
+      {
+        if (is_leader == 1)
+        {
+          paxos_prepare pp;
+          pp.instance_id = msg->u.nack.instance_id;
+          pp.ballot = msg->u.nack.promised_ballot + 1;
+          send_paxos_prepare(acceptor_sock_fd, &acceptor_addr, &pp);
+        }
+      }
+      break;  
+
       case PAXOS_CLIENT_VALUE:
       {
         if (is_leader == 1)
@@ -160,6 +178,7 @@ unbox_received_message(paxos_message *msg)
       case PAXOS_LEADER:
       {
         gettimeofday(&last, NULL);
+        is_received_heartbeat = 1;
         if (is_leader != 1)
         {
           paxos_leader pl = msg->u.leader;
@@ -198,7 +217,7 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
 void 
 send_heartbeat(evutil_socket_t fd, short event, void *arg)
 {
-  event_add(send_heartbeat, 1);
+  event_add(ev_heartbeat, &tv1);
   if (is_leader == 1)
   {
     printf("hi\n");
@@ -209,16 +228,17 @@ send_heartbeat(evutil_socket_t fd, short event, void *arg)
     msg.type = PAXOS_LEADER;
     msg.u.leader = pl;
     send_paxos_message(proposer_fd, &proposer_addr, &msg);
-    //usleep(1000); //send heartbeat each milisecond
   }
 }
 
 void 
 is_leader_alive(evutil_socket_t fd, short event, void *arg)
 {
+  event_add(ev_is_leader_alive, &tv2);
   gettimeofday(&current, NULL);
-  if (current.tv_usec - last.tv_usec > 20000)
+  if (current.tv_usec - last.tv_usec > 20000 && is_received_heartbeat)
   {
+    printf("leader is dead\n");
     is_leader = 1;
     paxos_leader pl;
     pl.leader_id = id;
@@ -255,6 +275,7 @@ main(int argc, char* argv[])
   struct sockaddr_in proposer_sock_addr;
 
   proposer_fd = create_socket_by_role(config_file, "proposers", &proposer_addr);
+  evutil_make_socket_nonblocking(proposer_fd);
   acceptor_sock_fd = create_socket_by_role(config_file, "acceptors", &acceptor_addr);
   learner_sock_fd = create_socket_by_role(config_file, "learners", &learner_addr);
 
@@ -262,19 +283,18 @@ main(int argc, char* argv[])
   evutil_make_socket_nonblocking(proposer_sock_fd);
   subscribe_multicast_group_by_role(config_file, "proposers", proposer_sock_fd);
 
-  struct event *ev_submit_client, *ev_heartbeat, *ev_is_leader_alive;
+  struct event *ev_submit_client;
   ev_submit_client = event_new(base, proposer_sock_fd, EV_READ|EV_PERSIST, on_receive_message, &base);
   event_add(ev_submit_client, NULL);
 
   ev_heartbeat = event_new(base, proposer_sock_fd, 0, send_heartbeat, &base);
-  //event_add(ev_heartbeat, NULL);
 
-  ev_is_leader_alive = event_new(base, proposer_sock_fd, EV_WRITE|EV_PERSIST, is_leader_alive, &base);
-  event_add(ev_is_leader_alive, NULL);
+  ev_is_leader_alive = event_new(base, proposer_sock_fd, 0, is_leader_alive, &base);
 
   event_base_dispatch(base);
 
   event_free(ev_submit_client);
+  event_free(ev_heartbeat);
   event_base_free(base);
 
   return 0;
