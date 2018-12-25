@@ -1,3 +1,3 @@
-#!/usr/bin/env bash
+#!/bin/sh
 
-./acceptor.o $1 $2
+exec ./acceptor "$@"
