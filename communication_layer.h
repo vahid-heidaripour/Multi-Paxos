@@ -15,7 +15,7 @@ group_address
 get_server_address_by_role(const char *config, const char *role);
 
 int 
-create_socket_with_bind(const char *config, const char *role, struct sockaddr_in addr, int bind_value);
+create_socket_with_bind(const char *config, const char *role, int bind_value);
 
 int
 create_socket_by_role(const char *config, const char *role, struct sockaddr_in *addr);

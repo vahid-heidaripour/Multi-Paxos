@@ -14,7 +14,7 @@
 
 #define MSGBUFSIZE 1024
 
-u_int id;
+uint32_t id;
 
 struct sockaddr_in proposer_addr;
 struct sockaddr_in learner_addr;
@@ -188,9 +188,7 @@ main(int argc, char *argv[])
   struct event_base *base = NULL;
   base = event_base_new();
 
-  struct sockaddr_in acceptor_addr;
-
-  int acceptor_socket = create_socket_with_bind(config_file, "acceptors", acceptor_addr, 1);
+  int acceptor_socket = create_socket_with_bind(config_file, "acceptors", 1);
   evutil_make_socket_nonblocking(acceptor_socket);
   subscribe_multicast_group_by_role(config_file, "acceptors", acceptor_socket);
 

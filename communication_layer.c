@@ -32,9 +32,10 @@ get_server_address_by_role(const char *config, const char *role)
 }
 
 int 
-create_socket_with_bind(const char *config, const char *role, struct sockaddr_in addr, int bind_value)
+create_socket_with_bind(const char *config, const char *role, int bind_value)
 {
   u_int loop = 1;
+  struct sockaddr_in addr;
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd < 0)
     err(1, "\ncreate socket error\n");

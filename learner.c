@@ -85,9 +85,7 @@ main(int argc, char *argv[])
     struct event_base *base = NULL;
     base = event_base_new();
 
-    struct sockaddr_in learner_addr;
-
-    int learner_socket = create_socket_with_bind(config_file, "learners", learner_addr, 1);
+    int learner_socket = create_socket_with_bind(config_file, "learners", 1);
     evutil_make_socket_nonblocking(learner_socket);
     subscribe_multicast_group_by_role(config_file, "learners", learner_socket);
 

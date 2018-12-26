@@ -27,7 +27,7 @@ int free_position = 0;
 
 int is_leader = 0;
 int is_received_heartbeat = 0;
-u_int id = 0;
+uint32_t id = 0;
 
 struct timeval tv1 = {0, 1000}; //timeval for send heartbeat
 struct timeval tv2 = {0, 100};  //timeval to check dead leader
@@ -60,7 +60,7 @@ instance_new(int instance_id, int ballot)
 
 struct proposer
 {
-  u_int id;
+  uint32_t id;
 };
 
 struct proposer
@@ -260,14 +260,12 @@ main(int argc, char* argv[])
   struct event_base *base = NULL;
   base = event_base_new();
 
-  struct sockaddr_in proposer_sock_addr;
-
   proposer_fd = create_socket_by_role(config_file, "proposers", &proposer_addr);
   evutil_make_socket_nonblocking(proposer_fd);
   acceptor_sock_fd = create_socket_by_role(config_file, "acceptors", &acceptor_addr);
   learner_sock_fd = create_socket_by_role(config_file, "learners", &learner_addr);
 
-  proposer_sock_fd = create_socket_with_bind(config_file, "proposers", proposer_sock_addr, 1);
+  proposer_sock_fd = create_socket_with_bind(config_file, "proposers", 1);
   evutil_make_socket_nonblocking(proposer_sock_fd);
   subscribe_multicast_group_by_role(config_file, "proposers", proposer_sock_fd);
 
