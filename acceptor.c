@@ -38,7 +38,7 @@ set_default_values()
   ins.instance_id = -1;
   ins.ballot = 0;
   ins.value_ballot = 0;
-  strcpy(ins.value.paxos_value_val, "!@#$^&*");
+  strcpy(ins.value.paxos_value_val, "NULL");
   
   return ins;
 }
