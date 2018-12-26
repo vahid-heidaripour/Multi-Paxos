@@ -29,8 +29,8 @@ int is_leader = 0;
 int is_received_heartbeat = 0;
 u_int id = 0;
 
-struct timeval tv1 = {0, 1000};
-struct timeval tv2 = {0, 100};
+struct timeval tv1 = {0, 1000}; //timeval for send heartbeat
+struct timeval tv2 = {0, 100};  //timeval to check dead leader
 
 struct event *ev_heartbeat, *ev_is_leader_alive;
 
@@ -156,7 +156,6 @@ unbox_received_message(paxos_message *msg)
 
       case PAXOS_CLIENT_VALUE:
       {
-        printf("I received a value\n");
         if (is_leader == 1)
         {
           struct instance inst = instance_new(next_instance_id, 1);
@@ -217,8 +216,6 @@ send_heartbeat(evutil_socket_t fd, short event, void *arg)
   evtimer_add(ev_heartbeat, &tv1);
   if (is_leader == 1)
   {
-    //printf("hi\n");
-    fflush(stdout);
     paxos_leader pl;
     pl.leader_id = id;
     pl.last_instance_id = next_instance_id;
@@ -237,8 +234,6 @@ is_leader_alive(evutil_socket_t fd, short event, void *arg)
 	  evtimer_add(ev_is_leader_alive, &tv2);
   else if (is_received_heartbeat)
   {
-    printf("leader is dead\n");
-    fflush(stdout);
     is_leader = 1;
     is_received_heartbeat = 0;
   }

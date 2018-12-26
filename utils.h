@@ -1,8 +1,6 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-//#include <stdint.h>
-
 struct paxos_value
 {
     char paxos_value_val[1024];
