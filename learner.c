@@ -55,6 +55,7 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
     {
         char value[1024];
         strcpy(value, result.u.client_value.value.paxos_value_val);
+        printf("%s\n", value);
         if (strcmp(value, "!@#$^&*") != 0) //default value
             printf("%s\n", value);
         fflush(stdout);
