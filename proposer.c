@@ -60,8 +60,7 @@ instance_new(int instance_id, int ballot)
 
 struct proposer
 {
-  int id;
-  int number_of_acceptors;
+  u_int id;
 };
 
 struct proposer
@@ -250,8 +249,7 @@ main(int argc, char* argv[])
 {
   if (argc < 2)
     err(1, "\n2 arguments needed!\n");
-    
-  int number_of_acceptors = NUMBER_OF_ACCEPTORS;
+  
   id = atoi(argv[1]);
 
   if (id == 1)

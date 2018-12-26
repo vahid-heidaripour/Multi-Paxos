@@ -74,8 +74,7 @@ main(int argc, char *argv[])
     if (argc < 2)
     err(1, "\n2 arguments needed!\n");
 
-    int number_of_acceptors = 3;
-    int id = atoi(argv[1]);
+    u_int id = atoi(argv[1]);
 
     char *config_file = argv[2];
 

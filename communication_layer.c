@@ -21,7 +21,8 @@ get_server_address_by_role(const char *config, const char *role)
   
   while (!feof(infile))
     { 
-      fscanf(infile, "%s %s %d", addr.role, addr.ip_addr, &addr.port);
+      if (fscanf(infile, "%s %s %d", addr.role, addr.ip_addr, &addr.port) < 3)
+        err(1, "\nInput items problem\n");
       if (strcmp(addr.role, role) == 0)
         break;
     }

@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include <stdint.h>
+//#include <stdint.h>
 
 struct paxos_value
 {
@@ -11,64 +11,64 @@ typedef struct paxos_value paxos_value;
 
 struct paxos_prepare
 {
-    uint32_t instance_id;
-    uint32_t ballot;
+    u_int instance_id;
+    u_int ballot;
 };
 typedef struct paxos_prepare paxos_prepare;
 
 struct paxos_promise
 {
-    uint32_t acceptor_id;
-    uint32_t instance_id;
-    uint32_t ballot;
-    uint32_t value_ballot;
+    u_int acceptor_id;
+    u_int instance_id;
+    u_int ballot;
+    u_int value_ballot;
     paxos_value value;
 };
 typedef struct paxos_promise paxos_promise;
 
 struct paxos_accept
 {
-    uint32_t instance_id;
-    uint32_t ballot;
+    u_int instance_id;
+    u_int ballot;
     paxos_value value;
 };
 typedef struct paxos_accept paxos_accept;
 
 struct paxos_accepted
 {
-    uint32_t acceptor_id;
-    uint32_t instance_id;
-    uint32_t ballot;
-    uint32_t value_ballot;
+    u_int acceptor_id;
+    u_int instance_id;
+    u_int ballot;
+    u_int value_ballot;
     paxos_value value;
 };
 typedef struct paxos_accepted paxos_accepted;
 
 struct paxos_nack
 {
-    uint32_t instance_id;
-    uint32_t promised_ballot;
+    u_int instance_id;
+    u_int promised_ballot;
 };
 typedef struct paxos_nack paxos_nack;
 
 struct paxos_client_value
 {
-    uint32_t instance_id;
+    u_int instance_id;
     paxos_value value;
 };
 typedef struct paxos_client_value paxos_client_value;
 
 struct paxos_has_hole
 {
-    uint32_t instance_id_low;
-    uint32_t instance_id_high;
+    u_int instance_id_low;
+    u_int instance_id_high;
 };
 typedef struct paxos_has_hole paxos_has_hole;
 
 struct paxos_leader
 {
-    uint32_t leader_id;
-    uint32_t last_instance_id;
+    u_int leader_id;
+    u_int last_instance_id;
 };
 typedef struct paxos_leader paxos_leader;
 

@@ -14,7 +14,7 @@
 
 #define MSGBUFSIZE 1024
 
-int id;
+u_int id;
 
 struct sockaddr_in proposer_addr;
 struct sockaddr_in learner_addr;
