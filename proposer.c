@@ -27,7 +27,7 @@ int free_position = 0;
 
 int is_leader = 0;
 int is_received_heartbeat = 0;
-int id = 0;
+u_int id = 0;
 
 struct timeval tv1 = {0, 1000};
 struct timeval tv2 = {0, 100};
