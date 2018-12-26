@@ -1,0 +1,15 @@
+This is a very basic Multi-Paxos implementation in C.
+For building and running:
+make clean
+make
+
+Or you can only make a specific role, e.g., make proposer
+In order to have a working system, we need at least 1 proposer, 2 acceptor,
+1 learner, and 1 client.
+For example, to start a client with id 1:
+./client.sh 1 paxos.config
+and the same for other roles.
+
+Based on our assumptions, there is no recovery for stopped roles. So, if you killed 
+proposer number 1 don't start it again with the same id. Do the same for other 
+roles, too.
