@@ -53,8 +53,9 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
     int instance_id = result.u.client_value.instance_id;
     if (learner_instance.current_instance_id == instance_id)
     {
-        char value = result.u.client_value.value.paxos_value_val;
-        if (value != "!@#$^&*") //default value
+        char value[1024];
+        strcpy(value, result.u.client_value.value.paxos_value_val);
+        if (strcmp(value, "!@#$^&*") != 0) //default value
             printf("%s\n", value);
         fflush(stdout);
         learner_instance.current_instance_id++;
