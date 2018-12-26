@@ -62,7 +62,6 @@ create_socket_with_bind(const char *config, const char *role, struct sockaddr_in
 int
 create_socket_by_role(const char *config, const char *role, struct sockaddr_in *addr)
 {
-  u_int loop = 1;
   int fd = socket(AF_INET, SOCK_DGRAM, 0);
   if (fd < 0)
     err(1, "\ncreate socket error\n");

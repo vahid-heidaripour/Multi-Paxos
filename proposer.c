@@ -277,13 +277,13 @@ main(int argc, char* argv[])
   subscribe_multicast_group_by_role(config_file, "proposers", proposer_sock_fd);
 
   struct event *ev_submit_client;
-  ev_submit_client = event_new(base, proposer_sock_fd, EV_READ|EV_PERSIST, on_receive_message, &base);
+  ev_submit_client = event_new(base, proposer_sock_fd, EV_READ|EV_PERSIST, on_receive_message, NULL);
   event_add(ev_submit_client, NULL);
 
-  ev_heartbeat = evtimer_new(base, send_heartbeat, &base);
+  ev_heartbeat = evtimer_new(base, send_heartbeat, NULL);
   evtimer_add(ev_heartbeat, &tv1);
 
-  ev_is_leader_alive = evtimer_new(base, is_leader_alive, &base);
+  ev_is_leader_alive = evtimer_new(base, is_leader_alive, NULL);
   evtimer_add(ev_is_leader_alive, &tv2);
 
   event_base_dispatch(base);
