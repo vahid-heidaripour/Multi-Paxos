@@ -53,7 +53,9 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
     int instance_id = result.u.client_value.instance_id;
     if (learner_instance.current_instance_id == instance_id)
     {
-        printf("%s\n", result.u.client_value.value.paxos_value_val);
+        int strcmp_ret = strcmp(result.u.client_value.value.paxos_value_val, "NULL");
+        if (strcmp_ret != 0)
+            printf("%s\n", result.u.client_value.value.paxos_value_val);
         fflush(stdout);
         learner_instance.current_instance_id++;
     }
