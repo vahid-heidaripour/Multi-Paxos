@@ -31,8 +31,7 @@ main(int argc, char* argv[])
   socket_fd = create_socket_by_role(config_file, "proposers", &addr);
   while (!feof(stdin))
    {
-      if (scanf("%[^\n]%*c", message) < 0)
-        err(1, "\nInput item problem\n");
+      scanf("%[^\n]%*c", message);
       send_paxos_submit(socket_fd, &addr, message, -1);
    }
 

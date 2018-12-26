@@ -53,7 +53,9 @@ on_receive_message(evutil_socket_t fd, short event, void *arg)
     int instance_id = result.u.client_value.instance_id;
     if (learner_instance.current_instance_id == instance_id)
     {
-        printf("%s\n", result.u.client_value.value.paxos_value_val);
+        char value = result.u.client_value.value.paxos_value_val;
+        if (value != "!@#$^&*") //default value
+            printf("%s\n", value);
         fflush(stdout);
         learner_instance.current_instance_id++;
     }
@@ -92,7 +94,7 @@ main(int argc, char *argv[])
     acceptor_sock_fd = create_socket_by_role(config_file, "acceptors", &acceptor_addr);
 
     struct event *ev_receive_message;
-    ev_receive_message = event_new(base, learner_socket, EV_READ|EV_PERSIST, on_receive_message, &base);
+    ev_receive_message = event_new(base, learner_socket, EV_READ|EV_PERSIST, on_receive_message, NULL);
     event_add(ev_receive_message, NULL);
 
     event_base_dispatch(base);
