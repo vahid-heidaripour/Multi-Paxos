@@ -1,5 +1,5 @@
-This is a very basic Multi-Paxos implementation in C.
-For building and running:
+## This is a very basic Multi-Paxos implementation in C.
+### For building and running:
 make clean
 make
 
