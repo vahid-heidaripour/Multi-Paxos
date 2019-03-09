@@ -1,9 +1,9 @@
 ## This is a very basic Multi-Paxos implementation in C.
 ### For building and running:
-make clean
-make
-
-Or you can only make a specific role, e.g., make proposer
+  - make clean
+  - make
+  - Or you can only make a specific role, e.g., make proposer
+  
 In order to have a working system, we need at least 1 proposer, 2 acceptor,
 1 learner, and 1 client.
 For example, to start a client with id 1:
@@ -24,7 +24,7 @@ We assume fail-stop processes. That is, processes fail by halting and do not rec
 • no need to implement a recovery procedure for acceptors or learners 
 • all state can be kept in memory - no need to use stable storage
 
-TODO - 
-Use stable storage
-Recovery procedure for roles
-Timeouts
+### TODO 
+  - Use stable storage
+  - Recovery procedure for roles
+  - Timeouts
